@@ -8,8 +8,8 @@ namespace DeploymentApi.Controllers
     [Route("api/[controller]/[action]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {"Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"};
+        //private static readonly string[] Summaries = new[]
+        //{"Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"};
         
         public TestPower powshell = new TestPower();
         public List<string> commands =new() {
@@ -26,24 +26,24 @@ namespace DeploymentApi.Controllers
     //powshell.commands;
 
         
-        private readonly ILogger<WeatherForecastController> _logger;
+        //private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
+        //public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        //{
+        //    _logger = logger;
+        //}
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
-        {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-        }
+        //[HttpGet(Name = "GetWeatherForecast")]
+        //public IEnumerable<WeatherForecast> Get()
+        //{
+        //    return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        //    {
+        //        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+        //        TemperatureC = Random.Shared.Next(-20, 55),
+        //        Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        //    })
+        //    .ToArray();
+        //}
         [HttpPost]
         [Route("/PostFileUploud")]
         [DisableRequestSizeLimit]
@@ -69,6 +69,7 @@ namespace DeploymentApi.Controllers
             finally { powshell.ExecuteCommand(await powshell.DeleteCommand(filePath)); }
             return HttpStatusCode.OK;
         }
+
         [HttpPost]
         [Route("/PostCreateWebsite")]
         public async Task<string> CreateWebsite(string name, int port, string ipAddr = "*")
@@ -89,20 +90,86 @@ namespace DeploymentApi.Controllers
             
         }
 
-        //public async void UploadFile(InputFileChangeEventArgs e)
-        //    {
-        //        int chunkSize = 800000000;
 
-        //        using (var client = new HttpClient())
-        //        using (var form = new MultipartFormDataContent())
-        //        {
-        //            client.Timeout = TimeSpan.FromMinutes(5);
-        //            // File = Folder name.
-        //            form.Add(new StreamContent(e.File.OpenReadStream(chunkSize)), "File", e.File.Name);
+        [HttpPost]
+        [Route("/PostCreatePool")]
+        public async Task<string> CreatePool(string name)
+        {
+            try
+            {
+                if (await powshell.poolCheck(name) != false)
+                {
+                    powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
+                }
+                return "error pool not created";
 
-        //            await client.PostAsync("http://localhost:5000/WeatherForecast", form);
-        //        }
-        //    }
+            }
+            catch (Exception)
+            {
+                return "error i dunno";
+
+            }
+
+        }
+
+        [HttpPost]
+        [Route("/PostStopWebsite")]
+        public async Task<string> StopWebsite(string name)
+        {
+            try
+            {
+                if (await powshell.webCheck(name) != false) { 
+                    powshell.ExecuteCommand(await powshell.StopWebCommand(name));
+                }
+                return  "error web not created";
+
+            }
+            catch (Exception)
+            {
+                return "error i dunno";
+
+            }
+            
+        }    
+        [HttpPost]
+        [Route("/PostStartWebsite")]
+        public async Task<string> StartWebsite(string name)
+        {
+            try
+            {
+                if (await powshell.webCheck(name) != false) { 
+                    powshell.ExecuteCommand(await powshell.StartWebCommand(name));
+                }
+                return  "error web not started";
+
+            }
+            catch (Exception)
+            {
+                return "error i dunno";
+
+            }
+            
+        }
+        [HttpPost]
+        [Route("/PostStopPool")]
+        public async Task<string> StartPool(string name)
+        {
+            try
+            {
+                if (await powshell.poolCheck(name) != false)
+                {
+                    powshell.ExecuteCommand(await powshell.StartWebCommand(name));
+                }
+                return "error pool not stopped";
+
+            }
+            catch (Exception)
+            {
+                return "error i dunno";
+
+            }
+
+        }
 
     }
 }
