@@ -39,7 +39,7 @@ namespace ClassLibrary1
                 RedirectStandardOutput = true
             };
             process.Start();
-            process.WaitForExit(10000);
+            process.WaitForExit(10);
             return process.StandardOutput.ReadToEnd().ToString();
         }
 
@@ -74,26 +74,25 @@ namespace ClassLibrary1
 
 
 
-        public async Task<bool> poolCheck(string name)
-        {
-            string existing =  ExecuteCommand(@$"Get-WebAppPoolState -Name {name}");
-            return existing.Contains("value");
-        }
-        public async Task<bool> webCheck(string name)
-        {
-            string existing =  ExecuteCommand(@$"Get-Website -Name {name}");
-            return existing.Contains("True");
-        }
-        public async Task<string> CommandWithArgument(string command, string[] args)
-        {
-            string commandbuild = null;
-            for (int i = 0; i < args.Count(); i++)
-            {
-                commandbuild += command.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList()[i] + args[i];
-            }
-            return commandbuild;
+        public async Task<string> poolCheck(string name) => ExecuteCommand(@"$result = Get-WebAppPoolState -Name " + name + "; echo $result");
+        public async Task<string> webCheck(string name) => ExecuteCommand(@"$result = Get-Website -Name " + name + ";  echo $fuck.GetAttributeValue(\"State\")");
 
-        }
+
+        //public async Task<string> CommandCheck(string name)
+        //{
+        //    string existing = ExecuteCommand(name);
+        //    return existing;
+        //}
+        //public async Task<string> CommandWithArgument(string command, string[] args)
+        //{
+        //    string commandbuild = null;
+        //    for (int i = 0; i < args.Count(); i++)
+        //    {
+        //        commandbuild += command.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList()[i] + args[i];
+        //    }
+        //    return commandbuild;
+
+        //}
 
 
         //public async Task<string> CheckIfExist(string name, byte index)
