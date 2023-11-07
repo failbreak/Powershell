@@ -53,31 +53,31 @@ namespace ClassLibrary1
         public async Task<string> CreatePoolCommand(string name) => @$"New-WebAppPool -Name {name}";
         public async Task<string> StartWebCommand(string name) => @$"Start-Website -Name {name}";
         public async Task<string> StopPoolCommand(string name) => @$"Stop-WebAppPool -Name {name}";
-        //public async Task<string> StartPoolCommand(string name) => @$"Start-WebAppPool -Name {name}";
-        
-        
+        public async Task<string> StartPoolCommand(string name) => @$"Start-WebAppPool -Name {name}";
+
+
         //public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\inetpub\wwwroot\";
-        public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\Users\maxx0696\Desktop\test";
+        public async Task<string> UnzipCommand(string zipname) => @"try { Expand-Archive -Path " + zipname + @" -DestinationPath C:\inetpub\wwwroot\ -ErrorAction stop; echo Finished  } catch {echo Failed}";
         public async Task<string> DeleteCommand(string pathname) => @$"Remove-Item '{pathname}' -Recurse";
 
-        public List<string> commands = new(){
-@"Test-Path IIS:\AppPools\;",
-@"Get-Website -Name ;",
-@"Expand-Archive -Path ;.zip -DestinationPath C:\inetpub\wwwroot\;",
-@"Start-Website -Name ;",
-@"Stop-Website -Name ;",
-@"Start-WebAppPool -Name ;",
-@"Remove-Item 'C:\inetpub\wwwroot\;",
-@"New-WebSite -Name ; -Port ; -IpAddress ; -PhysicalPath C:\inetpub\wwwroot\; -ApplicationPool ;"
-};
+//        public List<string> commands = new(){
+//@"Test-Path IIS:\AppPools\;",
+//@"Get-Website -Name ;",
+//@"Expand-Archive -Path ;.zip -DestinationPath C:\inetpub\wwwroot\;",
+//@"Start-Website -Name ;",
+//@"Stop-Website -Name ;",
+//@"Start-WebAppPool -Name ;",
+//@"Remove-Item 'C:\inetpub\wwwroot\;",
+//@"New-WebSite -Name ; -Port ; -IpAddress ; -PhysicalPath C:\inetpub\wwwroot\; -ApplicationPool ;"
+//};
 
 
 
 
         public async Task<bool> poolCheck(string name)
         {
-            string existing =  ExecuteCommand(@$"Test-Path IIS:\AppPools\{name}");
-            return existing.Contains("True");
+            string existing =  ExecuteCommand(@$"Get-WebAppPoolState -Name {name}");
+            return existing.Contains("value");
         }
         public async Task<bool> webCheck(string name)
         {
@@ -92,8 +92,8 @@ namespace ClassLibrary1
                 commandbuild += command.Split(';', StringSplitOptions.RemoveEmptyEntries).ToList()[i] + args[i];
             }
             return commandbuild;
-        }
 
+        }
 
 
         //public async Task<string> CheckIfExist(string name, byte index)
