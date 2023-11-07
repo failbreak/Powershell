@@ -59,14 +59,18 @@ namespace DeploymentApi.Controllers
             using (var fileStream = new FileStream(filePath, FileMode.Create)) { await stream.CopyToAsync(fileStream); }
             try
             {
-               powshell.ExecuteCommand(await powshell.UnzipCommand(filePath));
+                if ( powshell.ExecuteCommand(await powshell.UnzipCommand(filePath)).Contains("Finished"))
+                {
+                     powshell.ExecuteCommand(await powshell.DeleteCommand(filePath));
+                }
+               
+   
             }
             catch (Exception)
             {
 
                 
             }
-            finally { powshell.ExecuteCommand(await powshell.DeleteCommand(filePath)); }
             return HttpStatusCode.OK;
         }
 
@@ -76,10 +80,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                if (await powshell.poolCheck(name) != false) { 
-                    powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port,ipAddr));
-                }
-                return  "error pool not created";
+                //if (await powshell.poolCheck(name) != false) { 
+                powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port,ipAddr));
+                //}
+                //return  "error pool not created";
+                return "Command executed";
 
             }
             catch (Exception)
@@ -97,11 +102,12 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                if (await powshell.poolCheck(name) != false)
-                {
-                    powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
-                }
-                return "error pool not created";
+                //if (await powshell.poolCheck(name) != false)
+                //{
+                  powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
+                //}
+                //return "error pool not created";
+                return "Command executed";
 
             }
             catch (Exception)
@@ -118,10 +124,10 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                if (await powshell.webCheck(name) != false) { 
+                //if (await powshell.webCheck(name) != false) { 
                     powshell.ExecuteCommand(await powshell.StopWebCommand(name));
-                }
-                return  "error web not created";
+                //}
+                return "Command executed";
 
             }
             catch (Exception)
@@ -137,10 +143,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                if (await powshell.webCheck(name) != false) { 
+                //if (await powshell.webCheck(name) != false) { 
                     powshell.ExecuteCommand(await powshell.StartWebCommand(name));
-                }
-                return  "error web not started";
+                //}
+                //return  "error web not started";
+                return "Command executed";
 
             }
             catch (Exception)
@@ -156,11 +163,12 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                if (await powshell.poolCheck(name) != false)
-                {
-                    powshell.ExecuteCommand(await powshell.StartWebCommand(name));
-                }
-                return "error pool not stopped";
+                //if (await powshell.poolCheck(name) != false)
+                //{
+                 powshell.ExecuteCommand(await powshell.StartWebCommand(name));
+                //}
+                //return "error pool not stopped";
+                return "Command executed";
 
             }
             catch (Exception)

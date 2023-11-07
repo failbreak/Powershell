@@ -5,7 +5,30 @@ namespace ClassLibrary1
     public class TestPower
     {
 
-        public async Task<string> ExecuteCommand(string command)
+
+        //public async Task<string> ExecuteCommand(string Command)
+        // {
+        //     var tcs = new TaskCompletionSource<string>();
+
+        //     var process = new Process
+        //     {
+        //         StartInfo = {    FileName = "powershell.exe",
+        //         Arguments = $"-Command \"{Command}\"",
+        //         UseShellExecute = false,
+        //         RedirectStandardOutput = true }
+        //     };
+
+        //     process.Exited += (sender, args) =>
+        //     {
+        //         tcs.SetResult(process.StandardOutput.ReadToEnd().ToString());
+        //         process.Dispose();
+        //     };
+        //     process.Start();
+
+        //     return tcs.Task.Result;
+        // }
+
+        public string ExecuteCommand(string command)
         {
             using var process = new Process();
             process.StartInfo = new ProcessStartInfo()
@@ -16,6 +39,7 @@ namespace ClassLibrary1
                 RedirectStandardOutput = true
             };
             process.Start();
+            process.WaitForExit(10000);
             return process.StandardOutput.ReadToEnd().ToString();
         }
 
@@ -29,8 +53,11 @@ namespace ClassLibrary1
         public async Task<string> CreatePoolCommand(string name) => @$"New-WebAppPool -Name {name}";
         public async Task<string> StartWebCommand(string name) => @$"Start-Website -Name {name}";
         public async Task<string> StopPoolCommand(string name) => @$"Stop-WebAppPool -Name {name}";
-        public async Task<string> StartPoolCommand(string name) => @$"Start-WebAppPool -Name {name}";
-        public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\inetpub\wwwroot\";
+        //public async Task<string> StartPoolCommand(string name) => @$"Start-WebAppPool -Name {name}";
+        
+        
+        //public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\inetpub\wwwroot\";
+        public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\Users\maxx0696\Desktop\test";
         public async Task<string> DeleteCommand(string pathname) => @$"Remove-Item '{pathname}' -Recurse";
 
         public List<string> commands = new(){
@@ -49,12 +76,12 @@ namespace ClassLibrary1
 
         public async Task<bool> poolCheck(string name)
         {
-            string existing = await ExecuteCommand(@$"Test-Path IIS:\AppPools\{name}");
+            string existing =  ExecuteCommand(@$"Test-Path IIS:\AppPools\{name}");
             return existing.Contains("True");
         }
         public async Task<bool> webCheck(string name)
         {
-            string existing = await ExecuteCommand(@$"Get-Website -Name {name}");
+            string existing =  ExecuteCommand(@$"Get-Website -Name {name}");
             return existing.Contains("True");
         }
         public async Task<string> CommandWithArgument(string command, string[] args)
