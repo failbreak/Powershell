@@ -39,16 +39,19 @@ namespace DeploymentApi.Controllers
 
             using var stream = file.OpenReadStream();
             using (var fileStream = new FileStream(filePath, FileMode.Create)) { await stream.CopyToAsync(fileStream); }
-            if (powshell.ExecuteCommand(await powshell.UnzipCommand(filePath)).Contains("Finished"))
+            int exitcode = Convert.ToInt32(await powshell.ExecuteCommand(await powshell.UnzipCommand(filePath)));
+            if (exitcode == 0)
             {
                 powshell.ExecuteCommand(await powshell.DeleteCommand(filePath));
                 return HttpStatusCode.OK;
             }
-            else
+            else if (exitcode == 20)
             {
                 powshell.ExecuteCommand(await powshell.DeleteCommand(filePath));
                 return HttpStatusCode.Conflict;
             }
+            else
+                return HttpStatusCode.Conflict;
 
 
         }
@@ -60,14 +63,14 @@ namespace DeploymentApi.Controllers
             
             try
             {
-                string pool = await powshell.poolCheck(name);
-                string web = await powshell.webCheck(name);
-                if (pool.Contains("started")  && web.Contains('3') == false && pool.Contains("started") && web.Contains('1') == false) // check if logic is correct
+                string pool = await powshell.poolGetState(name);
+                string web = await powshell.poolGetState(name);
+                if (pool.Contains("Started") || pool.Contains("Stopped") && !web.Contains('3') && !web.Contains('1')) // check if logic is correct
                 {
                     powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port, ipAddr));
                     return @$"Website: {name} Created.";
                 }
-                else if (pool.Contains("does not exist") && web.Contains('3') == false && web.Contains('1') == false) // check if logic is correct
+                else if (pool.Contains("does not exist") && !web.Contains('3') && !web.Contains('1')) // check if logic is correct
                 {
                     powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
                     powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port, ipAddr));
@@ -91,13 +94,14 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                //if (await powshell.poolCheck(name) == false)
-                //{
-                    powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
+                string pool = await powshell.poolGetState(name);
+                if (!pool.Contains("started"))
+                {
+                powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
                     return @$"ApplicationPool: {name} Created.";
-                //}
-                //else
-                //    return @$"Couldnt Create ApplicationPool:{name}.";
+                }
+                else
+                    return @$"Couldnt Create ApplicationPool:{name}.";
 
 
             }

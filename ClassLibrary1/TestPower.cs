@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ClassLibrary1
 {
@@ -28,7 +29,7 @@ namespace ClassLibrary1
         //     return tcs.Task.Result;
         // }
 
-        public string ExecuteCommand(string command)
+        public async Task<string> ExecuteCommand(string command)
         {
             using var process = new Process();
             process.StartInfo = new ProcessStartInfo()
@@ -40,7 +41,8 @@ namespace ClassLibrary1
             };
             process.Start();
             process.WaitForExit(10);
-            return process.StandardOutput.ReadToEnd().ToString();
+            return await process.StandardOutput.ReadToEndAsync();
+           
         }
 
         //async bool ModuleCheck(string name) => await ExecuteCommand(@$"Get-Module -ListAvailable -Name {name}").Contains($@"{name}");
@@ -57,27 +59,42 @@ namespace ClassLibrary1
 
 
         //public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\inetpub\wwwroot\";
-        public async Task<string> UnzipCommand(string zipname) => @"try { Expand-Archive -Path " + zipname + @" -DestinationPath C:\inetpub\wwwroot\ -ErrorAction stop; echo Finished  } catch {echo Failed}";
+        public async Task<string> UnzipCommand(string zipname) => @"$exitStatus = 0; try { Expand-Archive -Path " + zipname + @" -DestinationPath C:\inetpub\wwwroot\ -ErrorAction stop; } catch {echo ""An error occurred:""; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; } ";
         public async Task<string> DeleteCommand(string pathname) => @$"Remove-Item '{pathname}' -Recurse";
 
-//        public List<string> commands = new(){
-//@"Test-Path IIS:\AppPools\;",
-//@"Get-Website -Name ;",
-//@"Expand-Archive -Path ;.zip -DestinationPath C:\inetpub\wwwroot\;",
-//@"Start-Website -Name ;",
-//@"Stop-Website -Name ;",
-//@"Start-WebAppPool -Name ;",
-//@"Remove-Item 'C:\inetpub\wwwroot\;",
-//@"New-WebSite -Name ; -Port ; -IpAddress ; -PhysicalPath C:\inetpub\wwwroot\; -ApplicationPool ;"
-//};
 
 
+        public async Task<string> poolGetState(string name)
+            => await ExecuteCommand(@"$exitStatus = 0; try { $State = Get-Website -Name " + name + " -ErrorAction stop;} catch { echo \"An error occurred: \"; echo $_. ;  $exitStatus = 20;} finally { $result = $State.value + \":\" + $exitStatus; echo $result}");
+        /* Add this to WebGetState
+        ## Dev log number 01:51. Sanity? what is sanity. 
+        ## Script works its not pretty. but i will start fighting if anyone comments on it
+        ## also null values are a bitch. funny enough I DIDNT HAVE THIS PROBLEM BEFORE!!!!!
+        $exitStatus = 0; 
+        try { 
+        $State = Get-Website -Name pub -ErrorAction stop; 
+        } 
+        catch {
+        echo "An error occurred:"; echo $_. ;  $exitStatus = 20; 
+        } finally 
+        { 
+        if($State -eq $null )
+        {
+        $StateResult = "null"; 
+        }
+        else
+        { 
+        $StateResult = $State.GetAttributeValue("State")
+        } 
+        $result = $StateResult.ToString() + ":" + $exitStatus; echo $result 
+        }
+        */
 
+        public async Task<string> WebGetState(string name) => await ExecuteCommand(@"$exitStatus = 0; try { $State = Get-Website -Name " + name + "-ErrorAction stop; }  "
+            + "catch {} " 
+            + "finally { $result $State.GetAttributeValue(\"State\") + \":\" + $exitStatus }");
 
-        public async Task<string> poolCheck(string name) => ExecuteCommand(@"$result = Get-WebAppPoolState -Name " + name + "; echo $result");
-        public async Task<string> webCheck(string name) => ExecuteCommand(@"$result = Get-Website -Name " + name + ";  echo $fuck.GetAttributeValue(\"State\")");
-
-
+        #region Deprecated or bad
         //public async Task<string> CommandCheck(string name)
         //{
         //    string existing = ExecuteCommand(name);
@@ -105,6 +122,6 @@ namespace ClassLibrary1
         //    else
         //        return error;
         //}
-
+        #endregion
     }
 }
