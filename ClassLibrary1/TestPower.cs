@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ClassLibrary1
@@ -59,7 +60,7 @@ namespace ClassLibrary1
 
 
         //public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\inetpub\wwwroot\";
-        public async Task<string> UnzipCommand(string zipname) => @"$exitStatus = 0; try { Expand-Archive -Path " + zipname + @" -DestinationPath C:\inetpub\wwwroot\ -ErrorAction stop; } catch {echo ""An error occurred:""; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; } ";
+        public async Task<string> UnzipCommand(string zipname) => @"$exitStatus = 0; try { Expand-Archive -Path " + zipname + " -DestinationPath C:\\inetpub\\wwwroot\\ -ErrorAction stop; } catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; } ";
         public async Task<string> DeleteCommand(string pathname) => @$"Remove-Item '{pathname}' -Recurse";
 
 
@@ -90,9 +91,14 @@ namespace ClassLibrary1
         }
         */
 
-        public async Task<string> WebGetState(string name) => await ExecuteCommand(@"$exitStatus = 0; try { $State = Get-Website -Name " + name + "-ErrorAction stop; }  "
-            + "catch {} " 
-            + "finally { $result $State.GetAttributeValue(\"State\") + \":\" + $exitStatus }");
+        /// <summary>
+        ///  Gets the sate of a website
+        ///  1(started),3(stopped),null(Doesnt exist)
+        ///  exit code: 0 ok, 20 failure
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>string, string </returns>
+        public async Task<string> WebGetState(string name) => await ExecuteCommand(@"$exitStatus = 0;  try { $State = Get-Website -Name "+ name+" -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_. ;  $exitStatus = 20; } finally {if ($State - eq $null ) { $StateResult = \"null\";} else{ $StateResult = $State.GetAttributeValue(\"State\")} $result = $StateResult.ToString() + \":\" + $exitStatus; echo $result }");
 
         #region Deprecated or bad
         //public async Task<string> CommandCheck(string name)
