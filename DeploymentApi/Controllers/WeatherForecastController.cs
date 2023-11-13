@@ -8,18 +8,8 @@ namespace DeploymentApi.Controllers
     [Route("api/[controller]/[action]")]
     public class WeatherForecastController : ControllerBase
     {
-
+        // Find a better name than TestPower and powshell
         public TestPower powshell = new();
-        //        public List<string> commands =new() {
-        //@"Test-Path IIS:\AppPools\;",
-        //@"Get-Website -Name ;",
-        //@"Expand-Archive -Path C:\inetpub\wwwroot\;.zip -DestinationPath C:\inetpub\wwwroot\;",
-        //@"Start-Website -Name ;",
-        //@"Stop-Website -Name ;",
-        //@"Start-WebAppPool -Name ;",
-        //@"Remove-Item 'C:\inetpub\wwwroot\;",
-        //@"New-WebSite -Name ; -Port ; -IpAddress ; -PhysicalPath C:\inetpub\wwwroot\; -ApplicationPool ;"};
-
 
         [HttpPost]
         [Route("/PostFileUploud")]
@@ -34,15 +24,15 @@ namespace DeploymentApi.Controllers
 
             using var stream = file.OpenReadStream();
             using (var fileStream = new FileStream(filePath, FileMode.Create)) { await stream.CopyToAsync(fileStream); }
-            int exitcode = Convert.ToInt32(await powshell.ExecuteCommand(await powshell.UnzipCommand(filePath)));
+            int exitcode = Convert.ToInt32(await powshell.ExecuteCommand(powshell.UnzipCommand(filePath)));
             if (exitcode == 0)
             {
-                powshell.ExecuteCommand(await powshell.DeleteCommand(filePath));
+               await powshell.ExecuteCommand(powshell.DeleteCommand(filePath));
                 return HttpStatusCode.OK;
             }
             else if (exitcode == 20)
             {
-                powshell.ExecuteCommand(await powshell.DeleteCommand(filePath));
+               await powshell.ExecuteCommand(powshell.DeleteCommand(filePath));
                 return HttpStatusCode.Conflict;
             }
             else
@@ -58,17 +48,17 @@ namespace DeploymentApi.Controllers
             
             try
             {
-                string pool = await powshell.poolGetState(name);
-                string web = await powshell.poolGetState(name);
-                if (pool.Contains("Started") || pool.Contains("Stopped") && !web.Contains('3') && !web.Contains('1')) // check if logic is correct
+                string pool = await powshell.GetState(name, TestPower.State.Pool);
+                string web = await powshell.GetState(name, TestPower.State.Web);
+                if (pool.Contains("Started") || pool.Contains("Stopped") && !web.Contains("Started") && !web.Contains("Stopped")) // check if logic is correct
                 {
-                    powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port, ipAddr));
+                    await powshell.ExecuteCommand(powshell.CreateWebCommand(name, port, ipAddr));
                     return @$"Website: {name} Created.";
                 }
-                else if (pool.Contains("does not exist") && !web.Contains('3') && !web.Contains('1')) // check if logic is correct
+                else if (pool.Contains("null") && !web.Contains("Started") && !web.Contains("Stopped")) // check if logic is correct
                 {
-                    powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
-                    powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port, ipAddr));
+                    await powshell.ExecuteCommand(powshell.CreatePoolCommand(name));
+                    await powshell.ExecuteCommand(powshell.CreateWebCommand(name, port, ipAddr));
                     return @$"Website: {name} Created & Applicationpool: {name} Created.";
                 }
                 else
@@ -89,10 +79,10 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string pool = await powshell.poolGetState(name);
+                string pool = await powshell.GetState(name, TestPower.State.Pool);
                 if (!pool.Contains("Started") && !pool.Contains("Stopped"))
                 {
-                powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
+                await powshell.ExecuteCommand(powshell.CreatePoolCommand(name));
                     return @$"ApplicationPool: {name} Created.";
                 }
                 else
@@ -107,16 +97,14 @@ namespace DeploymentApi.Controllers
             }
 
         }
-
-
-
+           
         [HttpPost]
         [Route("/PostGetPoolState")]
         public async Task<HttpStatusCode> GetPoolState(string name)
         {
             try
             {
-                string pool = await powshell.poolGetState(name);
+                string pool = await powshell.GetState(name, TestPower.State.Pool);
                 if (!pool.Contains("Started"))
                 {
                     return HttpStatusCode.Conflict;
@@ -141,8 +129,8 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-            string web = await powshell.WebGetState(name);
-            if (!web.Contains("3"))
+            string web = await powshell.GetState(name, TestPower.State.Web);
+            if (!web.Contains("Started"))
             {
                 return HttpStatusCode.Conflict;
             }
@@ -165,10 +153,10 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string web = await powshell.WebGetState(name);
-                if (web.Contains("3"))
+                string web = await powshell.GetState(name, TestPower.State.Web);
+                if (web.Contains("Started"))
                 {
-                    powshell.ExecuteCommand(await powshell.StartWebCommand(name));
+                    await powshell.ExecuteCommand(powshell.StartWebCommand(name));
                     return @$"Website: {name}.  Has been started.";
                 }
                 else
@@ -189,10 +177,10 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string web = await powshell.WebGetState(name);
-                if (web.Contains("1"))
+                string web = await powshell.GetState(name, TestPower.State.Web);
+                if (web.Contains("Stopped"))
                 {
-                    powshell.ExecuteCommand(await powshell.StopWebCommand(name));
+                    await powshell.ExecuteCommand(powshell.StopWebCommand(name));
                     return @$"Stopped Website: {name}.";
                 }
                 else
@@ -213,10 +201,10 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string pool = await powshell.poolGetState(name);
+                string pool = await powshell.GetState(name, TestPower.State.Pool);
                 if (pool.Contains("Stopped"))
                 {
-                    powshell.ExecuteCommand(await powshell.StartPoolCommand(name));
+                    await powshell.ExecuteCommand(powshell.StartPoolCommand(name));
                     return @$"ApplicationPool: {name} Has been started.";
                 }
                 else
@@ -229,7 +217,55 @@ namespace DeploymentApi.Controllers
 
             }
 
+        }        
+        [HttpPost]
+        [Route("/PostDeleteApplicationPool")]
+        public async Task<string> DeletePool(string name)
+        {
+            try
+            {
+                string pool = await powshell.GetState(name, TestPower.State.Pool);
+                if (pool.Contains("Stopped"))
+                {
+                    await powshell.ExecuteCommand(powshell.DeletePoolCommand(name));
+                    return @$"ApplicationPool: {name} Has been Deleted.";
+                }
+                else
+                    return @$"ApplicationPool: {name} couldnt be Deleted, Reason: Already deleted or cant be deleted";
+
+            }
+            catch (Exception)
+            {
+                return "error i dunno";
+
+            }
+
         }
+        [HttpPost]
+        [Route("/PostDeleteWebSite")]
+        public async Task<string> DeleteWeb(string name, bool deletePool = false)
+        {
+            try
+            {
+                string Web = await powshell.GetState(name, TestPower.State.Web);
+                if (Web.Contains("Stopped") €€)
+                {
+                    await powshell.ExecuteCommand(powshell.DeletePoolCommand(name));
+                    return @$"ApplicationPool: {name} Has been Deleted.";
+                }
+                else if()
+                else
+                    return @$"ApplicationPool: {name} couldnt be Deleted, Reason: Already deleted or cant be deleted";
+
+            }
+            catch (Exception)
+            {
+                return "error i dunno";
+
+            }
+
+        }
+
 
         [HttpPost]
         [Route("/PostStopApplicationPool")]
@@ -237,10 +273,10 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string pool = await powshell.poolGetState(name);
+                string pool = await powshell.GetState(name, TestPower.State.Pool);
                 if (pool.Contains("Started"))
                 {
-                    powshell.ExecuteCommand(await powshell.StopPoolCommand(name));
+                    await powshell.ExecuteCommand(powshell.StopPoolCommand(name));
                 return @$"ApplicationPool: {name} Stopped";
                 }
                 else
