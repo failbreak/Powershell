@@ -8,11 +8,6 @@ namespace DeploymentApi.Controllers
     [Route("api/[controller]/[action]")]
     public class WeatherForecastController : ControllerBase
     {
-        private enum States
-        {
-            Stopped = 3,
-            Started = 1
-        }
 
         public TestPower powshell = new();
         //        public List<string> commands =new() {
@@ -39,16 +34,19 @@ namespace DeploymentApi.Controllers
 
             using var stream = file.OpenReadStream();
             using (var fileStream = new FileStream(filePath, FileMode.Create)) { await stream.CopyToAsync(fileStream); }
-            if (powshell.ExecuteCommand(await powshell.UnzipCommand(filePath)).Contains("Finished"))
+            int exitcode = Convert.ToInt32(await powshell.ExecuteCommand(await powshell.UnzipCommand(filePath)));
+            if (exitcode == 0)
             {
                 powshell.ExecuteCommand(await powshell.DeleteCommand(filePath));
                 return HttpStatusCode.OK;
             }
-            else
+            else if (exitcode == 20)
             {
                 powshell.ExecuteCommand(await powshell.DeleteCommand(filePath));
                 return HttpStatusCode.Conflict;
             }
+            else
+                return HttpStatusCode.Conflict;
 
 
         }
@@ -60,14 +58,14 @@ namespace DeploymentApi.Controllers
             
             try
             {
-                string pool = await powshell.poolCheck(name);
-                string web = await powshell.webCheck(name);
-                if (pool.Contains("started")  && web.Contains('3') == false && pool.Contains("started") && web.Contains('1') == false) // check if logic is correct
+                string pool = await powshell.poolGetState(name);
+                string web = await powshell.poolGetState(name);
+                if (pool.Contains("Started") || pool.Contains("Stopped") && !web.Contains('3') && !web.Contains('1')) // check if logic is correct
                 {
                     powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port, ipAddr));
                     return @$"Website: {name} Created.";
                 }
-                else if (pool.Contains("does not exist") && web.Contains('3') == false && web.Contains('1') == false) // check if logic is correct
+                else if (pool.Contains("does not exist") && !web.Contains('3') && !web.Contains('1')) // check if logic is correct
                 {
                     powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
                     powshell.ExecuteCommand(await powshell.CreateWebCommand(name, port, ipAddr));
@@ -91,13 +89,14 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                //if (await powshell.poolCheck(name) == false)
-                //{
-                    powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
+                string pool = await powshell.poolGetState(name);
+                if (!pool.Contains("Started") && !pool.Contains("Stopped"))
+                {
+                powshell.ExecuteCommand(await powshell.CreatePoolCommand(name));
                     return @$"ApplicationPool: {name} Created.";
-                //}
-                //else
-                //    return @$"Couldnt Create ApplicationPool:{name}.";
+                }
+                else
+                    return @$"Couldnt Create ApplicationPool:{name}.";
 
 
             }
@@ -109,19 +108,71 @@ namespace DeploymentApi.Controllers
 
         }
 
+
+
         [HttpPost]
+        [Route("/PostGetPoolState")]
+        public async Task<HttpStatusCode> GetPoolState(string name)
+        {
+            try
+            {
+                string pool = await powshell.poolGetState(name);
+                if (!pool.Contains("Started"))
+                {
+                    return HttpStatusCode.Conflict;
+                }
+                else
+                {
+                    return HttpStatusCode.OK;
+                }
+            }
+            catch (Exception)
+            {
+
+                return HttpStatusCode.Conflict;
+            }
+           
+        }
+
+
+        [HttpPost]
+        [Route("/PostGetWebState")]
+        public async Task<HttpStatusCode> GetWebSate(string name)
+        {
+            try
+            {
+            string web = await powshell.WebGetState(name);
+            if (!web.Contains("3"))
+            {
+                return HttpStatusCode.Conflict;
+            }
+            else
+            {
+                return HttpStatusCode.OK;
+            }
+
+            }
+            catch (Exception)
+            {
+
+                return HttpStatusCode.Conflict;
+            }
+        }
+
+            [HttpPost]
         [Route("/PostStartWebsite")]
         public async Task<string> StartWebsite(string name)
         {
             try
             {
-                //if (await powshell.webCheck(name))
-                //{
+                string web = await powshell.WebGetState(name);
+                if (web.Contains("3"))
+                {
                     powshell.ExecuteCommand(await powshell.StartWebCommand(name));
                     return @$"Website: {name}.  Has been started.";
-                //}
-                //else
-                //    return @$"{name} could not be started, Check if it exist.";
+                }
+                else
+                    return @$"{name} could not be started, Reason: already on or doesnt exist";
 
             }
             catch (Exception)
@@ -138,14 +189,16 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                
+                string web = await powshell.WebGetState(name);
+                if (web.Contains("1"))
+                {
                     powshell.ExecuteCommand(await powshell.StopWebCommand(name));
                     return @$"Stopped Website: {name}.";
-               
-                //else
-                //    return @$"Couldnt Stop Website: {name}, Possibly doesnt exist.";
+                }
+                else
+                    return @$"Couldnt Stop Website: {name}, Reason: already off or doesnt exist";
 
-            }
+                }
             catch (Exception)
             {
                 return "error i dunno";
@@ -160,13 +213,14 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                //if (await powshell.poolCheck(name))
-                //{
+                string pool = await powshell.poolGetState(name);
+                if (pool.Contains("Stopped"))
+                {
                     powshell.ExecuteCommand(await powshell.StartPoolCommand(name));
                     return @$"ApplicationPool: {name} Has been started.";
-                //}
-                //else
-                //    return @$"ApplicationPool: {name} couldnt be started, check if it exist.";
+                }
+                else
+                    return @$"ApplicationPool: {name} couldnt be started, Reason: already on or doesnt exist";
 
             }
             catch (Exception)
@@ -183,13 +237,15 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                //if (await powshell.poolCheck(name))
-                //{
-                powshell.ExecuteCommand(await powshell.StopPoolCommand(name));
+                string pool = await powshell.poolGetState(name);
+                if (pool.Contains("Started"))
+                {
+                    powshell.ExecuteCommand(await powshell.StopPoolCommand(name));
                 return @$"ApplicationPool: {name} Stopped";
-                //}
-                //else
-                //    return @$"ApplicationPool: {name} couldnt be Stopped.";
+                }
+                else
+                    return @$"ApplicationPool: {name} couldnt be started, Reason: already on or doesnt exist";
+
 
             }
             catch (Exception)
