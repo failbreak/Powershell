@@ -46,36 +46,36 @@ namespace ClassLibrary1
         //async bool ModuleCheck(string name) => await ExecuteCommand(@$"Get-Module -ListAvailable -Name {name}").Contains($@"{name}");
 
         public async Task<string> CreateWebCommand(string name, int port, string ipAddr = "*")
-            => @$"New-WebSite -Name {name} -Port {port} -IpAddress {ipAddr} -PhysicalPath C:\inetpub\wwwroot\{name} -ApplicationPool {name}";
-        public async Task<string> StopWebCommand(string name) => @$"Stop-Website -Name {name}";
-        public async Task<string> RenamefolderCommand(string name) => @$"Rename-Item {name}";
+            => @$"New-WebSite -Name {name}-{port} -Port {port} -IpAddress {ipAddr} -PhysicalPath C:\inetpub\wwwroot\{name} -ApplicationPool {name}";
+        public async Task<string> StopWebCommand(string name) => @"try {Stop-Website -Name " + name + " -ErrorAction stop; echo finished} catch {echo failed}";
+        public async Task<string> RenamefolderCommand(string name) => @"try {Rename-Item" + name + " -ErrorAction stop; echo finished} catch {echo failed}";
 
-        public async Task<string> CreatePoolCommand(string name) => @$"New-WebAppPool -Name {name}";
-        public async Task<string> StartWebCommand(string name) => @$"Start-Website -Name {name}";
-        public async Task<string> StopPoolCommand(string name) => @$"Stop-WebAppPool -Name {name}";
-        public async Task<string> StartPoolCommand(string name) => @$"Start-WebAppPool -Name {name}";
+        public async Task<string> CreatePoolCommand(string name) => @"try {New-WebAppPool -Name " + name + " -ErrorAction stop; echo finished} catch {echo failed}";
+        public async Task<string> StartWebCommand(string name) => @"try {Start-WebSite -Name " + name + " -ErrorAction stop; echo finished} catch {echo failed}";
+        public async Task<string> StopPoolCommand(string name) => @"try {Stop-WebAppPool -Name " + name + " -ErrorAction stop; echo finished} catch {echo failed}";
+        public async Task<string> StartPoolCommand(string name) => @"try {Start-WebAppPool -Name " + name + " -ErrorAction stop; echo finished} catch {echo failed}";
 
 
         //public async Task<string> UnzipCommand(string zipname) => @$"Expand-Archive -Path {zipname} -DestinationPath C:\inetpub\wwwroot\";
         public async Task<string> UnzipCommand(string zipname) => @"try { Expand-Archive -Path " + zipname + @" -DestinationPath C:\inetpub\wwwroot\ -ErrorAction stop; echo Finished  } catch {echo Failed}";
-        public async Task<string> DeleteCommand(string pathname) => @$"Remove-Item '{pathname}' -Recurse";
+        public async Task<string> DeleteCommand(string pathname) => @"try { Remove-Item " + pathname + " -Recurse -ErrorAction stop; echo Finished } catch {echo Failed}";
 
-//        public List<string> commands = new(){
-//@"Test-Path IIS:\AppPools\;",
-//@"Get-Website -Name ;",
-//@"Expand-Archive -Path ;.zip -DestinationPath C:\inetpub\wwwroot\;",
-//@"Start-Website -Name ;",
-//@"Stop-Website -Name ;",
-//@"Start-WebAppPool -Name ;",
-//@"Remove-Item 'C:\inetpub\wwwroot\;",
-//@"New-WebSite -Name ; -Port ; -IpAddress ; -PhysicalPath C:\inetpub\wwwroot\; -ApplicationPool ;"
-//};
+        //        public List<string> commands = new(){
+        //@"Test-Path IIS:\AppPools\;",
+        //@"Get-Website -Name ;",
+        //@"Expand-Archive -Path ;.zip -DestinationPath C:\inetpub\wwwroot\;",
+        //@"Start-Website -Name ;",
+        //@"Stop-Website -Name ;",
+        //@"Start-WebAppPool -Name ;",
+        //@"Remove-Item 'C:\inetpub\wwwroot\;",
+        //@"New-WebSite -Name ; -Port ; -IpAddress ; -PhysicalPath C:\inetpub\wwwroot\; -ApplicationPool ;"
+        //};
 
 
 
 
         public async Task<string> poolCheck(string name) => ExecuteCommand(@"$result = Get-WebAppPoolState -Name " + name + "; echo $result");
-        public async Task<string> webCheck(string name) => ExecuteCommand(@"$result = Get-Website -Name " + name + ";  echo $fuck.GetAttributeValue(\"State\")");
+        public async Task<string> webCheck(string name) => ExecuteCommand(@"$result = Get-Website -Name " + name + ";  echo $result.GetAttributeValue(\"State\")");
 
 
         //public async Task<string> CommandCheck(string name)
