@@ -63,6 +63,32 @@ namespace DeploymentApi.Controllers
 
         }
 
+
+        [HttpPut]
+        [Route("/WebBinding/Update")]
+        public async Task<HttpStatusCode> UpdateWebBinding(string name, int port, string IpAdd = "*")
+        {
+            try
+            {
+                string State = await powshell.GetState(name, TestPower.State.Web);
+                if (!State.Contains("null"))
+                {
+                    await powshell.ExecuteCommand(TestPower.SetWebbindingCommand(name, port, IpAdd));
+                    return HttpStatusCode.OK;
+                }
+                else
+                    return HttpStatusCode.Conflict;
+
+            }
+            catch (Exception)
+            {
+                return HttpStatusCode.InternalServerError;
+
+            }
+
+        }
+
+
         [HttpPost]
         [Route("/Website/Stop/")]
         public async Task<HttpStatusCode> StopWebsite(string name)
