@@ -11,7 +11,6 @@ namespace DeploymentApi.Controllers
     {
         public TestPower powshell = new();
 
-
         [HttpGet]
         [Route("/GetState/")]
         public async Task<HttpStatusCode> GetPoolState(string name, TestPower.State Option)
@@ -21,7 +20,6 @@ namespace DeploymentApi.Controllers
                 string state = await powshell.GetState(name, Option);
                 if (Option != TestPower.State.Pool || Option != TestPower.State.Web)
                 {
-
                     return state.Contains("True") ? HttpStatusCode.OK : HttpStatusCode.Conflict;
                 }
                 else
@@ -32,10 +30,7 @@ namespace DeploymentApi.Controllers
             catch (Exception)
             {
                 return HttpStatusCode.InternalServerError;
-               
             }
-
         }       
-       
     }
 }
