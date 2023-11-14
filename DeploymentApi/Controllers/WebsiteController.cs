@@ -11,7 +11,7 @@ namespace DeploymentApi.Controllers
 
         [HttpPost]
         [Route("/Website/Create")]
-        public async Task<string> CreateWebsite(string name, int port, string ipAddr = "*")
+        public async Task<HttpStatusCode> CreateWebsite(string name, int port, string ipAddr = "*")
         {
 
             try
@@ -21,27 +21,27 @@ namespace DeploymentApi.Controllers
                 if (pool.Contains("Started") || pool.Contains("Stopped") && !web.Contains("Started") && !web.Contains("Stopped")) // check if logic is correct
                 {
                     await powshell.ExecuteCommand(TestPower.CreateWebCommand(name, port, ipAddr));
-                    return @$"Website: {name} Created.";
+                    return HttpStatusCode.OK;
                 }
                 else if (pool.Contains("null") && !web.Contains("Started") && !web.Contains("Stopped")) // check if logic is correct
                 {
                     await powshell.ExecuteCommand(TestPower.CreatePoolCommand(name));
                     await powshell.ExecuteCommand(TestPower.CreateWebCommand(name, port, ipAddr));
-                    return @$"Website: {name} Created & Applicationpool: {name} Created.";
+                    return HttpStatusCode.OK;
                 }
                 else
-                    return @$"Website: {name}. could not be Created.";
+                   return HttpStatusCode.Conflict;
             }
             catch (Exception)
             {
-                return "error";
+                return HttpStatusCode.InternalServerError;
 
             }
 
         }
         [HttpPost]
         [Route("/Website/Start")]
-        public async Task<string> StartWebsite(string name)
+        public async Task<HttpStatusCode> StartWebsite(string name)
         {
             try
             {
@@ -49,15 +49,15 @@ namespace DeploymentApi.Controllers
                 if (web.Contains("Started"))
                 {
                     await powshell.ExecuteCommand(TestPower.StartWebCommand(name));
-                    return @$"Website: {name}.  Has been started.";
+                    return HttpStatusCode.OK;
                 }
                 else
-                    return @$"{name} could not be started, Reason: already on or doesnt exist";
+                    return HttpStatusCode.Conflict;
 
             }
             catch (Exception)
             {
-                return "error i dunno";
+                return HttpStatusCode.InternalServerError;
 
             }
 
@@ -65,7 +65,7 @@ namespace DeploymentApi.Controllers
 
         [HttpPost]
         [Route("/Website/Stop/")]
-        public async Task<string> StopWebsite(string name)
+        public async Task<HttpStatusCode> StopWebsite(string name)
         {
             try
             {
@@ -73,21 +73,21 @@ namespace DeploymentApi.Controllers
                 if (web.Contains("Stopped"))
                 {
                     await powshell.ExecuteCommand(TestPower.StopWebCommand(name));
-                    return @$"Stopped Website: {name}.";
+                    return HttpStatusCode.OK;
                 }
                 else
-                    return @$"Couldnt Stop Website: {name}, Reason: already off or doesnt exist";
+                    return HttpStatusCode.Conflict;
 
             }
             catch (Exception)
             {
-                return "error i dunno";
+                return HttpStatusCode.InternalServerError;
 
             }
         }
         [HttpDelete]
         [Route("/Website/Delete")]
-        public async Task<string> DeleteWeb(string name, bool deletePool = false)
+        public async Task<HttpStatusCode> DeleteWeb(string name, bool deletePool = false)
         {
             try
             {
@@ -96,21 +96,21 @@ namespace DeploymentApi.Controllers
                 if (Web.Contains("Stopped") && pool.Contains("Stopped") && deletePool)
                 {
                     await powshell.ExecuteCommand(TestPower.DeletePoolCommand(name));
-                    return @$"ApplicationPool: {name} Has been Deleted.";
+                    return HttpStatusCode.OK;
 
                 }
                 else if (Web.Contains("Stopped") && !deletePool)
                 {
                     await powshell.ExecuteCommand(TestPower.DeleteWebCommand(name));
-                    return @$"Website: {name} Has been Deleted. & ApplicationPool: {name} Preserved";
+                    return HttpStatusCode.OK;
                 }
                 else
-                    return @$"Website: {name} couldnt be Deleted, Reason: Already deleted or cant be deleted. CheckLogs";
+                    return HttpStatusCode.Conflict;
 
             }
             catch (Exception)
             {
-                return "error i dunno";
+                return HttpStatusCode.InternalServerError;
 
             }
 
