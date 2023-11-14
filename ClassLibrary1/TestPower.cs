@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -85,6 +86,7 @@ namespace ClassLibrary1
 
 
         #region GetStates
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public enum State
         {
             Pool,
