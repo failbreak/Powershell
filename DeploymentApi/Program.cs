@@ -15,6 +15,15 @@ var app = builder.Build();
     app.UseSwagger();
     app.UseSwaggerUI();
 //}
+
+
+app.MapControllerRoute(
+    name: "Deploy",
+    pattern: "{area:exists}/{controller}/{action}/");
+app.MapControllerRoute(
+    name: "State",
+    pattern: "{area:exists}/{controller}/{action}/");
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
