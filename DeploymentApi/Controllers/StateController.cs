@@ -31,7 +31,7 @@ namespace DeploymentApi.Controllers
             }
             catch (Exception)
             {
-                return HttpStatusCode.Unauthorized;
+                return HttpStatusCode.InternalServerError;
                
             }
 
