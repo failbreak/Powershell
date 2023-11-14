@@ -17,13 +17,6 @@ var app = builder.Build();
 //}
 
 
-app.MapControllerRoute(
-    name: "Deploy",
-    pattern: "{area:exists}/{controller}/{action}/");
-app.MapControllerRoute(
-    name: "State",
-    pattern: "{area:exists}/{controller}/{action}/");
-
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
