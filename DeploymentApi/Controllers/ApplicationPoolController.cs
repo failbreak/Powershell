@@ -13,7 +13,7 @@ namespace DeploymentApi.Controllers
 
         [HttpPost]
         [Route("/ApplicationPool/Create")]
-        public async Task<string> CreatePool(string name)
+        public async Task<HttpStatusCode> CreatePool(string name)
         {
             try
             {
@@ -21,16 +21,16 @@ namespace DeploymentApi.Controllers
                 if (!pool.Contains("Started") && !pool.Contains("Stopped"))
                 {
                     await powshell.ExecuteCommand(TestPower.CreatePoolCommand(name));
-                    return @$"ApplicationPool: {name} Created.";
+                    return HttpStatusCode.OK;
                 }
                 else
-                    return @$"Couldnt Create ApplicationPool:{name}.";
+                    return HttpStatusCode.Conflict;
 
 
             }
             catch (Exception)
             {
-                return "error";
+                return HttpStatusCode.InternalServerError;
 
             }
 
@@ -38,7 +38,7 @@ namespace DeploymentApi.Controllers
 
         [HttpPost]
         [Route("/ApplicationPool/Start")]
-        public async Task<string> StartPool(string name)
+        public async Task<HttpStatusCode> StartPool(string name)
         {
             try
             {
@@ -46,14 +46,14 @@ namespace DeploymentApi.Controllers
                 if (pool.Contains("Stopped"))
                 {
                     await powshell.ExecuteCommand(TestPower.StartPoolCommand(name));
-                    return @$"ApplicationPool: {name} Has been started.";
+                    return HttpStatusCode.OK;
                 }
                 else
-                    return @$"ApplicationPool: {name} couldnt be started, Reason: already on or doesnt exist";
+                    return HttpStatusCode.Conflict;
             }
             catch (Exception)
             {
-                return "error i dunno";
+                return HttpStatusCode.InternalServerError;
 
             }
 
@@ -61,7 +61,7 @@ namespace DeploymentApi.Controllers
 
         [HttpPost]
         [Route("/ApplicationPool/Stop")]
-        public async Task<string> StopPool(string name)
+        public async Task<HttpStatusCode> StopPool(string name)
         {
             try
             {
@@ -69,16 +69,16 @@ namespace DeploymentApi.Controllers
                 if (pool.Contains("Started"))
                 {
                     await powshell.ExecuteCommand(TestPower.StopPoolCommand(name));
-                    return @$"ApplicationPool: {name} Stopped";
+                    return HttpStatusCode.OK;
                 }
                 else
-                    return @$"ApplicationPool: {name} couldnt be started, Reason: already on or doesnt exist";
+                    return HttpStatusCode.Conflict;
 
 
             }
             catch (Exception)
             {
-                return "error i dunno";
+                return HttpStatusCode.InternalServerError;
 
             }
         }
