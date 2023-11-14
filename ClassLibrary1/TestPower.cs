@@ -96,7 +96,7 @@ namespace ClassLibrary1
         public async Task<string> GetState(string name, State state)
         {
             if (state == State.Pool || state == State.Web)
-                return await ExecuteCommand(@"$exitStatus = 0; try { $State = " + (state == State.Pool ? "Get-WebAppPoolState" : "Get-WebsiteState") + $" -Name {name} " + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.;  $exitStatus = 20; } finally {if ($State - eq $null ) { $StateResult = \"null\";} else{ $StateResult = $State.Value} $result = $StateResult.ToString() + \":\" + $exitStatus; echo $result }");
+                return await ExecuteCommand(@"$exitStatus = 0; try { $State = " + (state == State.Pool ? "Get-WebAppPoolState" : "Get-WebsiteState") + $" -Name {name} " + " -ErrorAction stop;} catch {echo "+@"""An error occurred:""" + "; echo $_;  $exitStatus = 20; } finally {if ($State -eq $null ) { $StateResult = " + @"""null""" + ";} else{ $StateResult = $State.Value} $result = $StateResult + " + @"':'" + " + $exitStatus; echo $result }");
             else
                 return await ExecuteCommand(@"$TestConn = 1; try {$TestConn = Test-Connection """+ name + @""" -count 2 -Quiet -ErrorAction Stop; } catch {echo ""An error occurred:""; echo $_;} finally { echo $TestConn;}");
         }
