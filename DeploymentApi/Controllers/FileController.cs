@@ -34,9 +34,7 @@ namespace DeploymentApi.Controllers
                 return HttpStatusCode.Conflict;
             }
             else
-                return HttpStatusCode.Conflict;
-
-
+                return HttpStatusCode.InternalServerError;
         }
 
     }
