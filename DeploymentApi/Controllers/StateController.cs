@@ -9,16 +9,16 @@ namespace DeploymentApi.Controllers
     [Route("api/[controller]/[action]")]
     public class StateController : Controller
     {
-        public TestPower powshell = new();
+        public PowerShellRunner powshell = new();
 
         [HttpGet]
         [Route("/GetState/")]
-        public async Task<HttpStatusCode> GetPoolState(string name, TestPower.State Option)
+        public async Task<HttpStatusCode> GetPoolState(string name, PowerShellRunner.State Option)
         {
             try
             {
                 string state = await powshell.GetState(name, Option);
-                if (Option != TestPower.State.Pool || Option != TestPower.State.Web)
+                if (Option != PowerShellRunner.State.Pool || Option != PowerShellRunner.State.Web)
                 {
                     return state.Contains("True") ? HttpStatusCode.OK : HttpStatusCode.Conflict;
                 }

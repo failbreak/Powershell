@@ -8,30 +8,31 @@ namespace DeploymentApi.Controllers
     [Route("api/[controller]/[action]")]
     public class WebsiteController : Controller
     {
-        public TestPower powshell = new();
+        public PowerShellRunner powshell = new();
 
         [HttpPost]
         [Route("/Website/Create")]
-        public async Task<HttpStatusCode> CreateWebsite(string name, int port, string ipAddr = "*")
+        public async Task<HttpStatusCode> CreateWebsite(string name, int port, string ipAddr)
         {
-
             try
             {
-                string pool = await powshell.GetState(name, TestPower.State.Pool);
-                string web = await powshell.GetState(name, TestPower.State.Web);
+                Website website = new(name,ipAddr, port);
+
+                string pool = await powshell.GetState(website.Name, PowerShellRunner.State.Pool);
+                string web = await powshell.GetState(website.Name, PowerShellRunner.State.Web);
                 if (pool.Contains("Started") || pool.Contains("Stopped") && !web.Contains("Started") && !web.Contains("Stopped")) // check if logic is correct
                 {
-                    await powshell.ExecuteCommand(TestPower.CreateWebCommand(name, port, ipAddr));
+                    await powshell.ExecuteCommand(PowerShellRunner.CreateWebCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else if (pool.Contains("null") && !web.Contains("Started") && !web.Contains("Stopped")) // check if logic is correct
                 {
-                    await powshell.ExecuteCommand(TestPower.CreatePoolCommand(name));
-                    await powshell.ExecuteCommand(TestPower.CreateWebCommand(name, port, ipAddr));
+                    await powshell.ExecuteCommand(PowerShellRunner.CreatePoolCommand(website));
+                    await powshell.ExecuteCommand(PowerShellRunner.CreateWebCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
-                   return HttpStatusCode.Conflict;
+                    return HttpStatusCode.Conflict;
             }
             catch (Exception)
             {
@@ -46,10 +47,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string web = await powshell.GetState(name, TestPower.State.Web);
+            Website website = new(name);
+                string web = await powshell.GetState(name, PowerShellRunner.State.Web);
                 if (web.Contains("Started"))
                 {
-                    await powshell.ExecuteCommand(TestPower.StartWebCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.StartWebCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
@@ -67,14 +69,15 @@ namespace DeploymentApi.Controllers
 
         [HttpPut]
         [Route("/WebBinding/Update")]
-        public async Task<HttpStatusCode> UpdateWebBinding(string name, int port, string IpAdd = "*")
+        public async Task<HttpStatusCode> UpdateWebBinding(string name, int port, string ipAddr)
         {
             try
             {
-                string State = await powshell.GetState(name, TestPower.State.Web);
+                Website website = new(name, ipAddr, port);
+                string State = await powshell.GetState(name, PowerShellRunner.State.Web);
                 if (!State.Contains("null"))
                 {
-                    await powshell.ExecuteCommand(TestPower.SetWebbindingCommand(name, port, IpAdd));
+                    await powshell.ExecuteCommand(PowerShellRunner.SetWebbindingCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
@@ -96,10 +99,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string web = await powshell.GetState(name, TestPower.State.Web);
+                Website website = new(name);
+                string web = await powshell.GetState(name, PowerShellRunner.State.Web);
                 if (web.Contains("Stopped"))
                 {
-                    await powshell.ExecuteCommand(TestPower.StopWebCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.StopWebCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
@@ -118,17 +122,18 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string Web = await powshell.GetState(name, TestPower.State.Web);
-                string pool = await powshell.GetState(name, TestPower.State.Pool);
+                Website website = new(name);
+                string Web = await powshell.GetState(name, PowerShellRunner.State.Web);
+                string pool = await powshell.GetState(name, PowerShellRunner.State.Pool);
                 if (Web.Contains("Stopped") && pool.Contains("Stopped") && deletePool)
                 {
-                    await powshell.ExecuteCommand(TestPower.DeletePoolCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.DeletePoolCommand(website));
                     return HttpStatusCode.OK;
 
                 }
                 else if (Web.Contains("Stopped") && !deletePool)
                 {
-                    await powshell.ExecuteCommand(TestPower.DeleteWebCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.DeleteWebCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else

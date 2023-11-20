@@ -8,7 +8,7 @@ namespace DeploymentApi.Controllers
     [Route("api/[controller]/[action]")]
     public class FileController : Controller
     {
-        public TestPower powshell = new();
+        public PowerShellRunner powshell = new();
         [HttpPost]
         [Route("/FileUploud")]
         [DisableRequestSizeLimit]
@@ -22,15 +22,15 @@ namespace DeploymentApi.Controllers
 
             using var stream = file.OpenReadStream();
             using (var fileStream = new FileStream(filePath, FileMode.Create)) { await stream.CopyToAsync(fileStream); }
-            int exitcode = Convert.ToInt32(await powshell.ExecuteCommand(TestPower.UnzipCommand(filePath)));
+            int exitcode = Convert.ToInt32(await powshell.ExecuteCommand(PowerShellRunner.UnzipCommand(filePath)));
             if (exitcode == 0)
             {
-                await powshell.ExecuteCommand(TestPower.DeleteCommand(filePath));
+                await powshell.ExecuteCommand(PowerShellRunner.DeleteCommand(filePath));
                 return HttpStatusCode.OK;
             }
             else if (exitcode == 20)
             {
-                await powshell.ExecuteCommand(TestPower.DeleteCommand(filePath));
+                await powshell.ExecuteCommand(PowerShellRunner.DeleteCommand(filePath));
                 return HttpStatusCode.Conflict;
             }
             else

@@ -6,7 +6,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ClassLibrary1
 {
-    public class TestPower
+    public class PowerShellRunner
     {
 
 
@@ -57,30 +57,30 @@ namespace ClassLibrary1
 
         //async bool ModuleCheck(string name) => await ExecuteCommand(@$"Get-Module -ListAvailable -Name {name}").Contains($@"{name}");
         #region Deployment Crud
-        public static string CreateWebCommand(string name, int port, string ipAddr)
-            => @$"New-WebSite -Name {name} -{port} -Port {port} -IpAddress {ipAddr} -PhysicalPath C:\inetpub\wwwroot\{name} -ApplicationPool {name}";
-        public static string CreatePoolCommand(string name)
-            => @"$exitStatus = 0; try {New-WebAppPool -Name " + name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus }";
-        public static string StartWebCommand(string name) 
-            => @"$exitStatus = 0; try {Start-WebSite -Name " + name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus }";
-        public static string StartPoolCommand(string name) 
-            => @"exitStatus = 0; try {Start-WebAppPool -Name " + name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
-        public static string StopPoolCommand(string name) 
-            => @"exitStatus = 0; try {Stop-WebAppPool -Name " + name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
-        public static string StopWebCommand(string name)
-            => @"exitStatus = 0; try {Stop-Website -Name " + name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
-        public static string SetWebbindingCommand(string name, int port, string ipAddr)
-            => @"exitStatus = 0; try {Set-WebBinding -Name " + name + " -Port " + port + " -IpAddress " + ipAddr +" -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
+        public static string CreateWebCommand(Website website)
+            => @$"New-WebSite -Name {website.Name} -Port {website.Port} -IpAddress {website.Ipaddr} -PhysicalPath C:\inetpub\wwwroot\{website.Name} -ApplicationPool {website.Name}";
+        public static string CreatePoolCommand(Website website)
+            => @"$exitStatus = 0; try {New-WebAppPool -Name " + website.Name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus }";
+        public static string StartWebCommand(Website website) 
+            => @"$exitStatus = 0; try {Start-WebSite -Name " + website.Name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus }";
+        public static string StartPoolCommand(Website website) 
+            => @"exitStatus = 0; try {Start-WebAppPool -Name " + website.Name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
+        public static string StopPoolCommand(Website website) 
+            => @"exitStatus = 0; try {Stop-WebAppPool -Name " + website.Name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
+        public static string StopWebCommand(Website website)
+            => @"exitStatus = 0; try {Stop-Website -Name " + website.Name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
+        public static string SetWebbindingCommand(Website website)
+            => @"exitStatus = 0; try {Set-WebBinding -Name " + website.Name + " -Port " + website.Port + " -IpAddress " + website.Ipaddr + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
         public static string RenamefolderCommand(string name) 
             => @"exitStatus = 0; try {Rename-Item" + name + " -ErrorAction stop;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
         public static string UnzipCommand(string zipname) 
             => @"$exitStatus = 0; try { Expand-Archive -Path " + zipname + " -DestinationPath C:\\inetpub\\wwwroot\\ -ErrorAction stop; } catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; } ";
         public static string DeleteCommand(string pathname) 
             => @"exitStatus = 0; try {Remove-Item " + pathname + " -Recurse;} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
-        public static string DeleteWebCommand(string name) 
-            => @"exitStatus = 0; try { Remove-WebAppPool -Name " + name +"} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
-        public static string DeletePoolCommand(string name) 
-            => @"exitStatus = 0; try { Remove-WebApplication -Name " + name +"} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
+        public static string DeleteWebCommand(Website website) 
+            => @"exitStatus = 0; try { Remove-WebAppPool -Name " + website.Name + "} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
+        public static string DeletePoolCommand(Website website) 
+            => @"exitStatus = 0; try { Remove-WebApplication -Name " + website.Name + "} catch {echo \"An error occurred:\"; echo $_.ErrorDetals; $exitStatus = 20;} finally { echo $exitStatus; }";
         #endregion
 
 

@@ -9,7 +9,7 @@ namespace DeploymentApi.Controllers
     public class ApplicationPoolController : ControllerBase
     {
         // Find a better name than TestPower and powshell
-        public TestPower powshell = new();
+        public PowerShellRunner powshell = new();
 
         [HttpPost]
         [Route("/ApplicationPool/Create")]
@@ -17,10 +17,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string pool = await powshell.GetState(name, TestPower.State.Pool);
+                Website website = new(name);
+                string pool = await powshell.GetState(name, PowerShellRunner.State.Pool);
                 if (!pool.Contains("Started") && !pool.Contains("Stopped"))
                 {
-                    await powshell.ExecuteCommand(TestPower.CreatePoolCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.CreatePoolCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
@@ -42,10 +43,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string pool = await powshell.GetState(name, TestPower.State.Pool);
+                Website website = new(name);
+                string pool = await powshell.GetState(name, PowerShellRunner.State.Pool);
                 if (pool.Contains("Stopped"))
                 {
-                    await powshell.ExecuteCommand(TestPower.StartPoolCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.StartPoolCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
@@ -65,10 +67,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string pool = await powshell.GetState(name, TestPower.State.Pool);
+                Website website = new(name);
+                string pool = await powshell.GetState(name, PowerShellRunner.State.Pool);
                 if (pool.Contains("Started"))
                 {
-                    await powshell.ExecuteCommand(TestPower.StopPoolCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.StopPoolCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
@@ -89,10 +92,11 @@ namespace DeploymentApi.Controllers
         {
             try
             {
-                string pool = await powshell.GetState(name, TestPower.State.Pool);
+                Website website = new(name);
+                string pool = await powshell.GetState(name, PowerShellRunner.State.Pool);
                 if (pool.Contains("Stopped"))
                 {
-                    await powshell.ExecuteCommand(TestPower.DeletePoolCommand(name));
+                    await powshell.ExecuteCommand(PowerShellRunner.DeletePoolCommand(website));
                     return HttpStatusCode.OK;
                 }
                 else
